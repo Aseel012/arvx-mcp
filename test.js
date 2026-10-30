@@ -72,9 +72,16 @@ async function connect(port, headers) {
     await b.callTool({ name: "arvx_run_reading", arguments: reading("Dana") });
     assert.strictEqual(seen[seen.length - 1].key, KEY); ok("Authorization: Bearer works too");
 
+    const before = seen.length;
+    const extra = { ...reading("Dana"), sneak: "top", user: { name: "Dana", email: "u@example.com", sneak: "user" } };
+    extra.emails = extra.emails.map((e) => ({ ...e, sneak: "email" }));
+    await b.callTool({ name: "arvx_run_reading", arguments: extra });
+    assert.strictEqual(seen.length, before + 1);
+    assert.strictEqual(JSON.stringify(seen[seen.length - 1].body).includes("sneak"), false); ok("fields not in the list never reach ARVX");
+
     assert.strictEqual(logs.includes(KEY) || logs.includes("ZZ9Q"), false); assert.strictEqual(logs.includes("u@example.com"), false); ok("no key or email in the logs");
-    console.log(`\n${pass} of 12 checks passed`);
-    process.exitCode = pass === 12 ? 0 : 1;
+    console.log(`\n${pass} of 13 checks passed`);
+    process.exitCode = pass === 13 ? 0 : 1;
   } catch (e) {
     console.error("FAILED:", e.message);
     process.exitCode = 1;
